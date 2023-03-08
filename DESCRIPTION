@@ -1,0 +1,17 @@
+Package: PT41F.t15.tmb.MP
+Type: Package
+Title: Pella-Tomlinson 40:10-Type MP with 15\% TAC Change from Previous Year Restriction
+Version: 1.0
+Date: 2023-03-01
+Authors@R: c(person("Paavo","Jumppanen",role=c("aut","cre"),email="paavo.jumppanen@csiro.au"))
+Maintainer: Paavo Jumppanen <paavo.jumppanen@csiro.au>
+Author: Paavo Jumppanen [aut, cre]
+Copyright: CSIRO Environment
+Description: The PT41F.t15.tmb.MP package contains the code to run the IOTC adopted MP for management of the Indian Ocean Big Eye Tuna fishery.
+License: GPL-2
+URL: https://github.com/pjumppanen/PT41F.t15.tmb.MP
+BugReports: https://github.com/pjumppanen/PT41F.t15.tmb.MP/issues
+Depends: R (>= 3.2)
+NeedsCompilation: yes
+LinkingTo: TMB,RcppEigen
+Archs: i386, x64
