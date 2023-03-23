@@ -1,8 +1,8 @@
 Package: PT41F.t15.tmb.MP
 Type: Package
 Title: Pella-Tomlinson 40:10-Type MP with 15\% TAC Change from Previous Year Restriction
-Version: 1.01
-Date: 2023-03-15
+Version: 1.02
+Date: 2023-03-24
 Authors@R: c(person("Paavo","Jumppanen",role=c("aut","cre"),email="paavo.jumppanen@csiro.au"))
 Maintainer: Paavo Jumppanen <paavo.jumppanen@csiro.au>
 Author: Paavo Jumppanen [aut, cre]

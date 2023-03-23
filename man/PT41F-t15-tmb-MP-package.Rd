@@ -54,13 +54,15 @@ print(results$Depletion)
 # display the TMB model data
 print(results$ModelData)
 
-# plot the MP recommendation evaluation plots
-print(results$plots)
+# plot the MP cpue fit plot
+print(results$plots$cpue_plot)
 
 \dontrun{
 # read catch data from IOTC (assumes readxl package is installed) and create a csv file
 # containing necessary data to run the MP, and then run the MP assessment
 library(readxl)
+library(ggplot2)
+library(reshape2)
 
 download.file('https://iotc.org/sites/default/files/documents/2022/09/IOTC-2022-WPTT24AS-DATA03-NC.zip',"catch_data.zip")
 unzip('catch_data.zip')
@@ -88,9 +90,10 @@ MP.Input <- data.frame(Year=1979:2021, Catch=NA, CPUE=NA, TAC=NA)
 MP.Input[catch[["Year/An"]] - 1978,]$Catch <- catch$BET
 MP.Input[cpue$yr - 1978,]$CPUE <- cpue$cpue
 
-# Add a final year TAC value so that the MP can determine the +/-15% change limit
-LastTAC <- MP.Input[MP.Input$Year == max(MP.Input$Year), ]$Catch
-MP.Input[MP.Input$Year == max(MP.Input$Year), ]$TAC <- LastTAC
+# Add a guestimate of final year TAC value so that the MP can determine the +/-15% change limit
+TAC.years <- (max(MP.Input$Year)-3):max(MP.Input$Year)
+LastTAC <- mean(MP.Input[MP.Input$Year \%in\% TAC.years, ]$Catch)
+MP.Input[MP.Input$Year \%in\% TAC.years, ]$TAC <- LastTAC
 
 # Save the MP data file
 write.csv(MP.Input, "mp_data_file.csv", row.names=F)
@@ -99,7 +102,30 @@ write.csv(MP.Input, "mp_data_file.csv", row.names=F)
 results2 <- assessMP("mp_data_file.csv")
 
 print(results2$TAC)
-print(results2$plots)
+
+data <- MP.Input
+RecommendedTAC <- rep(NA, nrow(data))
+RecommendedTAC[length(RecommendedTAC)] <- results2$TAC
+data <- cbind(data, "Recommended TAC"=RecommendedTAC)
+
+data_melt <- melt(data[, c("Year", "Catch", "TAC", "Recommended TAC")], id.vars='Year', value.name='Catch')
+colors <- c("Catch"="#00345D", "TAC"="#00A9CE", "Recommended TAC"="#000080")
+shapes <- c("Catch"=NA, "TAC"=NA, "Recommended TAC"=1)
+types <- c("Catch"=1, "TAC"=1, "Recommended TAC"=0)
+
+print(ggplot(data_melt, aes(x=Year, y=Catch / 1000, linetype=variable, color=variable, shape=variable)) +
+             geom_line(size=2) +
+             geom_point(size=6) + 
+             scale_linetype_manual(values=types) + 
+             scale_shape_manual(values=shapes) + 
+             scale_color_manual(values=colors) + 
+             scale_y_continuous(limits=c(0, 1.2 * max(data_melt$Catch / 1000)), expand=c(0, 0)) +
+             xlab('') + 
+             ylab('Catch (x 1000)\n ') + 
+             theme_bw() + 
+             theme(legend.title=element_blank()))
+
+print(results2$plots$cpue_plot)
 
 # run the shiny app incorporating the MP
 runShinyMP()
