@@ -90,10 +90,9 @@ MP.Input <- data.frame(Year=1979:2021, Catch=NA, CPUE=NA, TAC=NA)
 MP.Input[catch[["Year/An"]] - 1978,]$Catch <- catch$BET
 MP.Input[cpue$yr - 1978,]$CPUE <- cpue$cpue
 
-# Add a guestimate of final year TAC value so that the MP can determine the +/-15% change limit
-TAC.years <- (max(MP.Input$Year)-3):max(MP.Input$Year)
-LastTAC <- mean(MP.Input[MP.Input$Year \%in\% TAC.years, ]$Catch)
-MP.Input[MP.Input$Year \%in\% TAC.years, ]$TAC <- LastTAC
+# Add a final year TAC value so that the MP can determine the +/-15% change limit
+LastTAC <- MP.Input[MP.Input$Year == max(MP.Input$Year), ]$Catch
+MP.Input[MP.Input$Year == max(MP.Input$Year), ]$TAC <- LastTAC
 
 # Save the MP data file
 write.csv(MP.Input, "mp_data_file.csv", row.names=F)
