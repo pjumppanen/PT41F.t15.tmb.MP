@@ -26,6 +26,7 @@
 
 \examples{
 library(PT41F.t15.tmb.MP)
+library(readxl)
 
 # Create assessment CPUE series from region based CPUE series
 exportFileName  <- "BETOMcpue2022.csv"

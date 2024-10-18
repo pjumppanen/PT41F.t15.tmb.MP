@@ -58,6 +58,9 @@ assessmentCPUE <- function(CPUEDataFile, exportFileName, MPDatFile, IsSeasonal=F
   CPUE_Data <- read.csv(file = CPUEDataFile, header=T,as.is=T)
   CPUE_Data <- cbind(CPUE_Data, yr=as.integer(floor(CPUE_Data$YrQtr)), q=(CPUE_Data$YrQtr - floor(CPUE_Data$YrQtr)))
 
+  quarters <- as.numeric(levels(factor(CPUE_Data$q)))
+  num_quarters <- length(quarters)
+
   if (IsSeasonal == FALSE)
   {
     #re-normalize temperate cpue by season and use single series (unlike assessment) 
@@ -69,10 +72,10 @@ assessmentCPUE <- function(CPUEDataFile, exportFileName, MPDatFile, IsSeasonal=F
     names(R34)[2] <- "pr"
 
     #identify years with values for all seasons 
-    allSeasYrs  <- as.numeric(names(table(R34$yr)[table(R34$yr) == 4]))
+    allSeasYrs  <- as.numeric(names(table(R34$yr)[table(R34$yr) == num_quarters]))
     R34renorm   <- R34
 
-    for (q in c(0.0, 0.25, 0.5, 0.75))
+    for (q in quarters)
     {
       R34renorm[R34$q == q, 'pr'] <- R34[R34$q == q, 'pr'] / mean(R34[R34$q == q & R34$yr %in% allSeasYrs, 'pr'])
     }
@@ -147,7 +150,10 @@ assessmentCPUE <- function(CPUEDataFile, exportFileName, MPDatFile, IsSeasonal=F
   #annualized, aggregated data for MP to use 
   MPdat           <- as.data.frame(cbind(data$yr, data$pr_7994_m8))
   colnames(MPdat) <- c("yr", "cpue")
-  keepYrs         <- table(MPdat$yr) == 16 #only retain cpue observations with no non-mssing values (4 areas X 4 seasons) 
+
+  num_areas       <- length(levels(factor(data$AssessmentArea)))
+  entries_per_yr  <- num_areas * num_quarters
+  keepYrs         <- table(MPdat$yr) == entries_per_yr #only retain cpue observations with no non-mssing values (num_areas X num_quarters) 
   keepYrs         <- names(keepYrs)[keepYrs]
   MPdat           <- MPdat[MPdat$yr %in% keepYrs,]
   MPdat           <- stats::aggregate(MPdat$cpue, FUN=sum, by=list(MPdat$yr))
@@ -168,6 +174,8 @@ assessmentCPUE <- function(CPUEDataFile, exportFileName, MPDatFile, IsSeasonal=F
   graphics::par(mfrow=c(3,2))
 
   #compare standardization method
+  ymax <- max(data$pr_7994_m8)
+
   for (ia in c(4,1,2,3))
   {
     plotDat1 <- cbind(data$YrQtr[data$AssessmentAreaName == ia & data$yr > 1972], data$pr_7994_m8[data$AssessmentAreaName      == ia & data$yr > 1972])
@@ -178,13 +186,15 @@ assessmentCPUE <- function(CPUEDataFile, exportFileName, MPDatFile, IsSeasonal=F
       graphics::plot(1, xaxt="n", yaxt="n", bty="n", pch="", ylab="", xlab="", main="", sub="")
     }
     
-    graphics::plot(plotDat1, type='l', main="Region " %&% regionLab[ia], col=2, ylab="area-weighted CPUE", xlab="", ylim=c(0,2), yaxs='i')
+    graphics::plot(plotDat1, type='l', main="Region " %&% regionLab[ia], col=2, ylab="area-weighted CPUE", xlab="", ylim=c(0,ymax), yaxs='i')
     #  graphics::lines(plotDat2, col=1)
   }
 
   graphics::par(mfrow=c(3,2))
 
   #compare q trend assumption
+  ymax <- max(data$pr_7994_m8_q1)
+
   for (ia in c(4,1,2,3))
   {
     plotDat1 <- cbind(data$YrQtr[data$AssessmentAreaName == ia & data$yr > 1972], data$pr_7994_m8[data$AssessmentAreaName    == ia & data$yr > 1972])
@@ -195,13 +205,14 @@ assessmentCPUE <- function(CPUEDataFile, exportFileName, MPDatFile, IsSeasonal=F
       graphics::plot(1, xaxt="n", yaxt="n", bty="n", pch="", ylab="", xlab="", main="", sub="")
     }
     
-    graphics::plot(plotDat1, type='l',main="Region " %&% regionLab[ia], col=1, ylab="area-weighted CPUE", xlab="", ylim=c(0,2), yaxs='i')
+    graphics::plot(plotDat1, type='l',main="Region " %&% regionLab[ia], col=1, ylab="area-weighted CPUE", xlab="", ylim=c(0,ymax), yaxs='i')
     graphics::lines(plotDat3, col=2, lty=2)
   }
 
-  graphics::par(mfrow=c(3,2))
 
   #compare area weighting assumptions
+  ymax <- max(c(max(data$pr_7994_m8),max(data$pr_7594_m8),max(data$pr_8000_m8)))
+
   for (ia in c(4,1,2,3))
   {
     plotDat1     <- cbind(data$YrQtr[data$AssessmentAreaName == ia & data$yr > 1972], data$pr_7994_m8[data$AssessmentAreaName == ia & data$yr > 1972])
@@ -218,7 +229,7 @@ assessmentCPUE <- function(CPUEDataFile, exportFileName, MPDatFile, IsSeasonal=F
       graphics::plot(1, xaxt="n", yaxt="n", bty="n", pch="", ylab="", xlab="", main="", sub="")
     }
     
-    graphics::plot(plotDat3, type='l', main="Region " %&% regionLab[ia], col=3, ylab="area-weighted CPUE", xlab="", ylim=c(0,1.1), yaxs='i', lwd=3)
+    graphics::plot(plotDat3, type='l', main="Region " %&% regionLab[ia], col=3, ylab="area-weighted CPUE", xlab="", ylim=c(0,ymax ), yaxs='i', lwd=3)
     graphics::lines(plotDat2, col=2, lwd=2)
     graphics::lines(plotDat1, col=1)
   }
